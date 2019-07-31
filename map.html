@@ -10,21 +10,77 @@
 	<title>添加行政区划</title>
 </head>
 <body>
-	<div id="allmap"></div>
+    <div style="width:100%;margin:auto;">
+        查询地址：<input id = "address" type="text" value=""style="margin-right:100px;"/>
+        查询结果：<input id ="result" type="text"/>
+        <input type="button" value="查询" onclick="search();"/>
+    </div>
+	<div id="allmap" style="position: absolute;margin-top: 30px;width:100%;height:100%"></div>
 </body>
 </html>
 <script type="text/javascript">
 	// 百度地图API功能
 	var map = new BMap.Map("allmap");
 	map.centerAndZoom(new BMap.Point(121.12975, 31.45911), 5);
-    map.addControl(new BMap.ScaleControl());
-    map.addControl(new BMap.OverviewMapControl());
+    // map.addControl(new BMap.ScaleControl());
+    // map.addControl(new BMap.OverviewMapControl());
     map.addControl(new BMap.NavigationControl({
         type:BMAP_NAVIGATION_CONTROL_LARGE,
         anchor:BMAP_ANCHOR_TOP_LEFT,
-        offset:new BMap.Size(40,250)
+        offset:new BMap.Size(40,250),
+        enableGeolocatiom:true,
     }));
 	map.enableScrollWheelZoom();
+
+    var localSearch=new BMap.LocalSearch(map);
+
+    function search(){
+        map.clearOverlays();
+        let keyword=document.getElementById("address").value;
+        localSearch.setSearchCompleteCallback(function (res){
+            let poi=res.getPoi(0);
+            console.log(poi.point.lng,poi.point.lat);
+            document.getElementById("result").value=poi.point.lng+","+poi.point.lat;
+            let marker=new BMap.Marker(new BMap.Point(poi.point.lng,poi.point.lat));
+            map.addOverlay(marker);
+            var content = document.getElementById("address").value+"<br/><br/>经度："+poi.point.lng+"<br/>纬度："+poi.point.lat;
+            var infoWindow=new BMap.InfoWindow("<p style ='font-size:14px'>"+content+"</p>");
+            marker.addEventListener("click",function(){this.openInfoWindow(infoWindow);});
+        });
+        localSearch.search(keyword);
+    }
+
+    function addMarker(){
+        let data=[[121.073477,31.675832,1099],
+                  [121.126944,31.539534,2009],
+                  [121.20312,31.569074,3009],
+                  [121.044444,31.551351,4009]];
+    
+        for (var i=0;i<data.length;i++){
+            let marker =new BMap.Marker(new BMap.Point(data[i][0],data[i][1]));
+            map.addOverlay(marker);
+            let infoWindow=new BMap.InfoWindow("<p>"+data[i][2]+"</p>");
+            marker.addEventListener("click",function(){this.openInfoWindow(infoWindow);});
+            console.log(data[i][0],data[i][1],data[i][2]);
+            marker.disableMassClear();
+        }
+    }
+    addMarker()
+
+    // function addMarker(point){
+    //     var marker = new BMap.Marker(point);
+    //     map.addOverlay(marker);
+    // }
+
+    // function showInfo(e){
+    //     alert(e.point.lng+","+e.point.lat);
+    //     let point = e.point.lng+","+e.point.lat;
+    //     addMarker(point);
+    // }
+    // map.addEventListener("click",showInfo);
+
+
+
 
 	function getBoundary(){       
 		var bdary = new BMap.Boundary();
@@ -61,16 +117,17 @@
  //4绘制第一个多边形，覆盖住除行政区外的所有部分,fillColor:填充色，strokeColor：边界颜色（设置透明，否则会有其他线条），strokeOpacity：线条透明，fillOpacity：填充物透明。
             var ply1 = new BMap.Polygon("",{
                 strokeColor:'transparent',
-                fillColor:'#00f',
+                fillColor:'#000000',
                 fillOpacity:0,
                 strokeOpacity:0
             });
             ply1.setPath(paths);
             map.addOverlay(ply1);
+            ply1.disableMassClear();
 
               var ply = new BMap.Polygon(rs.boundaries[0],{
                   strokeWeight:2,
-                  strokeColor:'#ff0000',
+                  strokeColor:'#ffffff',
                   fillColor:''
               });
               map.addOverlay(ply);
@@ -83,3 +140,4 @@
 	}, 2000);
 
 </script>
+
